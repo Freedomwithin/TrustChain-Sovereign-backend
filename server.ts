@@ -67,7 +67,7 @@ const validateAddress = (address: string) => {
 const fetchWalletData = async (address: string) => {
     const pubKey = new PublicKey(address);
     const signatures = await fetchWithRetry(() =>
-        connection.getSignaturesForAddress(pubKey, { limit: 50 })
+        connection.getSignaturesForAddress(pubKey, { limit: 20 })
     );
     const transactions: any[] = [];
     const positions: any[] = [];
@@ -75,7 +75,7 @@ const fetchWalletData = async (address: string) => {
 
     for (const sigInfo of signatures) {
         try {
-            await delay(200);
+            await delay(500);
             const tx = await fetchWithRetry(() =>
                 connection.getParsedTransaction(sigInfo.signature, {
                     maxSupportedTransactionVersion: 0
