@@ -2,14 +2,14 @@
     "version": 2,
     "builds": [
         {
-            "src": "package.json",
+            "src": "server.ts",
             "use": "@vercel/node"
         }
     ],
-    "rewrites": [
+    "routes": [
         {
-            "source": "/(.*)",
-            "destination": "dist/server.js"
+            "src": "/(.*)",
+            "dest": "server.ts"
         }
     ]
 }

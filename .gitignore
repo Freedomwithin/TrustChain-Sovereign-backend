@@ -1,17 +1,5 @@
+# Vercel
 .vercel
-.env*.local
-
-
-# Node.js
-/node_modules
-/node_modules/.cache/babel-loader/
-/.yarn
-yarn-error.log
-package-lock.json
-
-# Build
-/build
-/dist
 
 # Environment files
 .env
@@ -20,6 +8,14 @@ package-lock.json
 .env.development.local
 .env.production
 .env.production.local
+.env*.local
+
+# Node
+node_modules
+node_modules/.cache
+/.yarn
+yarn-error.log
+package-lock.json
 
 # Logs
 logs
@@ -28,7 +24,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Editor and IDE files
+# Editor
 .idea
 .vscode
 *.suo
@@ -37,34 +33,24 @@ yarn-error.log*
 *.sln
 *.swp
 
-# OS generated files
+# OS
 .DS_Store
 Thumbs.db
 
-# Coverage directory used by tools like istanbul
-/coverage
-
-# Temporary files
+# Temp
 *.tmp
 *.bak
-*.swp
 
-# Optional: If you use specific frameworks or tools, add their files/folders
-# Example for React Native:
-# ios/build
-# android/build
+# Coverage
+/coverage
 
-# Example for specific editors like Sublime Text:
-# *.sublime-*
-/frontend/node_modules
-yarn.lock
-yarn.lock
-.DS_Store
-frontend/build
-.yarn
-backend/node_modules
+# TypeScript
+.tsbuildinfo
+.eslintcache
+*.js.map
+*.d.ts.map
 
-# --- Solana & Anchor ---
+# Solana / Anchor
 /on-chain/trustchain-notary/target
 /on-chain/trustchain-notary/test-ledger
 /on-chain/trustchain-notary/.anchor
@@ -72,15 +58,4 @@ backend/node_modules
 .anchor/
 target/
 test-ledger/
-
-# --- Additional JS/TS ---
-.tsbuildinfo
-.eslintcache
-*.js.map
-*.d.ts.map
-
-node_modules
-dist
-.env
-.env.local
 .solana-keys
