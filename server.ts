@@ -11,7 +11,6 @@ const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// IDL path corrected for root location
 const IDL = require('./idl/trustchain_notary.json');
 
 // @ts-ignore
@@ -19,7 +18,6 @@ import { calculateGini, calculateHHI } from './integrityEngine.js';
 // @ts-ignore
 import { fetchWithRetry } from './utils/rpc.js';
 
-// Resolve Environment
 const envPaths = [
     path.resolve(__dirname, ".env.local"),
     path.resolve(__dirname, ".env"),
@@ -39,16 +37,14 @@ if (!envLoaded) {
     console.warn("⚠️ WARNING: No .env found. Using Vercel environment variables.");
 }
 
-// Resolve Notary Identity
 const secretString = process.env.NOTARY_SECRET || "";
-let NOTARY_KEYPAIR: Keypair;
+let NOTARY_KEYPAIR: Keypair | null = null;
 try {
     const cleanString = secretString.replace(/[\[\]"\s]/g, '');
     const secretBytes = Uint8Array.from(cleanString.split(',').map(Number));
     NOTARY_KEYPAIR = Keypair.fromSecretKey(secretBytes);
 } catch (e) {
-    console.error("❌ ERROR: Could not parse NOTARY_SECRET.");
-    process.exit(1);
+    console.error("❌ ERROR: Could not parse NOTARY_SECRET.", e);
 }
 
 const rpcUrl = process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com";
@@ -99,6 +95,13 @@ const fetchWalletData = async (address: string) => {
 };
 
 export default async function handler(req: any, res: any) {
+    // Guard: fail clearly instead of crashing silently
+    if (!NOTARY_KEYPAIR) {
+        return res.status(500).json({
+            error: "NOTARY_SECRET is missing or invalid. Check Vercel environment variables."
+        });
+    }
+
     try {
         console.log(`🏛️ Notary Signer: ${NOTARY_KEYPAIR.publicKey.toBase58()}`);
         console.log(`🎯 Target: ${TARGET_WALLET.toBase58()}`);
