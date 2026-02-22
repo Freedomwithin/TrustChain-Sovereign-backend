@@ -24,7 +24,7 @@ const calculateGini = (values) => {
   }
 
   // Corrected math to avoid the "0.25" bug Jules found
-  if (sumOfValues === 0) return 0;
+  if (sumOfValues === 0) return 0.0001;
   return sumOfAbsoluteDifferences / (2 * n * sumOfValues);
 };
 

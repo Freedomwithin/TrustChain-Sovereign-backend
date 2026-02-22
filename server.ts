@@ -24,14 +24,17 @@ import { fetchWithRetry } from './utils/rpc.js';
 dotenv.config();
 
 // ---- Environment ----
-const envPaths = [
-    path.resolve(__dirname, ".env.local"),
-    path.resolve(__dirname, ".env"),
-];
-for (const envPath of envPaths) {
-    if (fs.existsSync(envPath)) {
-        dotenv.config({ path: envPath });
-        break;
+// Prioritize existing environment variables to support Edge/Serverless runtimes
+if (!process.env.NOTARY_SECRET) {
+    const envPaths = [
+        path.resolve(__dirname, ".env.local"),
+        path.resolve(__dirname, ".env"),
+    ];
+    for (const envPath of envPaths) {
+        if (fs.existsSync && fs.existsSync(envPath)) {
+            dotenv.config({ path: envPath });
+            break;
+        }
     }
 }
 
@@ -89,8 +92,10 @@ const fetchWalletData = async (address: string) => {
                     (tx.meta.preBalances[accountIndex] || 0) -
                     (tx.meta.postBalances[accountIndex] || 0)
                 );
-                transactions.push({ amount });
-                positions.push({ value: amount });
+                if (amount > 0) {
+                    transactions.push(amount);
+                    positions.push(amount);
+                }
             }
         } catch (err) { continue; }
     }
