@@ -77,7 +77,7 @@ const calculateSyncIndex = (timestamps) => {
 const checkLpEligibility = async (fairScoreTier, walletEvents) => {
   // 1. Calculate concentration based on current balances
   // Optimize: Scan only the last 15 signatures to prevent timeouts
-  const recentEvents = walletEvents.slice(-15);
+  const recentEvents = walletEvents.slice(-50);
 
   const balances = recentEvents.reduce((acc, event) => {
     acc[event.wallet] = (acc[event.wallet] || 0) + Math.abs(event.amount);
