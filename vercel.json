@@ -2,14 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "dist/services/notary_sync.js",
+      "src": "services/notary_sync.ts",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "source": "/api/sync",
-      "dest": "dist/services/notary_sync.js"
+      "dest": "services/notary_sync.ts"
     }
   ]
 }
