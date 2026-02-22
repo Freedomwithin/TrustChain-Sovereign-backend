@@ -6,10 +6,10 @@
   "main": "dist/server.js",
   "scripts": {
     "start": "node dist/server.js",
-    "dev": "nodemon server.js",
-    "build": "tsc",
+    "dev": "tsx server.js",
+    "build": "npx tsc",
     "sync:notary": "tsx services/notary_sync.ts",
-    "vercel-build": "echo 'Vercel building...' && tsc"
+    "vercel-build": "npx tsc"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",
