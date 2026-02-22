@@ -1,0 +1,40 @@
+{
+    "compilerOptions": {
+        /* Base Options */
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "node",
+        "lib": [
+            "ESNext"
+        ],
+        /* Interop & Logic */
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "strict": true,
+        /* JavaScript Support (Fixes your 2 remaining errors) */
+        "allowJs": true,
+        "checkJs": false,
+        /* Pathing & Output */
+        "outDir": "./dist",
+        "rootDir": "./",
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        /* Type Definitions */
+        "types": [
+            "node"
+        ]
+    },
+    "include": [
+        "services/**/*.ts",
+        "utils/**/*.ts",
+        "utils/**/*.js",
+        "services/**/*.js",
+        "server.js"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist"
+    ]
+}
