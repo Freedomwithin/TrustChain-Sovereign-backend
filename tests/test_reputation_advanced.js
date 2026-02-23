@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getFairScore, calculateTotalScore } from '../dist/services/reputationEngine.js';
+import { getFairScore, calculateTotalScore } from '../services/reputationEngine.js';
 import assert from 'assert';
 
 async function runTests() {
