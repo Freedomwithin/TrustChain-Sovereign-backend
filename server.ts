@@ -18,7 +18,6 @@ const IDL = require('./idl/trustchain_notary.json');
 
 // @ts-ignore
 import { calculateGini, calculateHHI } from './integrityEngine.js';
-// @ts-ignore
 import { getFairScore, calculateTotalScore } from './services/reputationEngine.js';
 // @ts-ignore
 import { fetchWithRetry } from './utils/rpc.js';
@@ -48,7 +47,7 @@ try {
     const secretBytes = Uint8Array.from(cleanString.split(',').map(Number));
     NOTARY_KEYPAIR = Keypair.fromSecretKey(secretBytes);
 } catch (e) {
-    console.error("❌ ERROR: Could not parse NOTARY_SECRET.");
+    console.error("ERROR: Could not parse NOTARY_SECRET.");
 }
 
 // ---- Connection ----
@@ -236,10 +235,10 @@ app.post('/api/verify', async (req: any, res: any) => {
                 .signers([NOTARY_KEYPAIR])
                 .rpc();
 
-            console.log(`✅ Notarized ${address}: ${signature}`);
+            console.log(`Notarized ${address}: ${signature}`);
         } catch (notaryErr: any) {
             // Don't fail the whole request if notarization fails
-            console.warn(`⚠️ Notarization skipped: ${notaryErr.message}`);
+            console.warn(`Notarization skipped: ${notaryErr.message}`);
         }
 
         const end = performance.now();
