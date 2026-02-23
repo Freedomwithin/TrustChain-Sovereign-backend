@@ -19,6 +19,8 @@ const IDL = require('./idl/trustchain_notary.json');
 // @ts-ignore
 import { calculateGini, calculateHHI } from './integrityEngine.js';
 // @ts-ignore
+import { getFairScore, calculateTotalScore } from './services/reputationEngine.js';
+// @ts-ignore
 import { fetchWithRetry } from './utils/rpc.js';
 
 dotenv.config();
@@ -46,7 +48,7 @@ try {
     const secretBytes = Uint8Array.from(cleanString.split(',').map(Number));
     NOTARY_KEYPAIR = Keypair.fromSecretKey(secretBytes);
 } catch (e) {
-    console.error("❌ ERROR: Could not parse NOTARY_SECRET.", e);
+    console.error("❌ ERROR: Could not parse NOTARY_SECRET.");
 }
 
 // ---- Connection ----
@@ -202,6 +204,12 @@ app.post('/api/verify', async (req: any, res: any) => {
 
         const statusNum = status === 'VERIFIED' ? 0 : status === 'PROBATIONARY' ? 1 : 2;
 
+        // Weighted Logic Integration
+        const fairScore = await getFairScore(address);
+        // TrustChain Score: (1 - Gini) * 100
+        const trustChainScore = Math.max(0, Math.round((1 - Math.min(gini, 1)) * 100));
+        const totalScore = calculateTotalScore(trustChainScore, fairScore);
+
         // On-chain notarization
         let signature: string | null = null;
         try {
@@ -238,7 +246,14 @@ app.post('/api/verify', async (req: any, res: any) => {
 
         return res.json({
             status,
-            scores: { gini, hhi, syncIndex: 0 },
+            scores: {
+                gini,
+                hhi,
+                syncIndex: 0,
+                totalScore,
+                fairScore,
+                trustChainScore
+            },
             txCount,
             signature,
             latencyMs: Math.round(end - start)
