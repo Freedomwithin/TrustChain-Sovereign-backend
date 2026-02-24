@@ -18,7 +18,6 @@ const IDL = require('./idl/trustchain_notary.json');
 
 // @ts-ignore
 import { calculateGini, calculateHHI } from './integrityEngine.js';
-// @ts-ignore
 import { getFairScore, calculateTotalScore } from './services/reputationEngine.js';
 // @ts-ignore
 import { fetchWithRetry } from './utils/rpc.js';
@@ -48,7 +47,7 @@ try {
     const secretBytes = Uint8Array.from(cleanString.split(',').map(Number));
     NOTARY_KEYPAIR = Keypair.fromSecretKey(secretBytes);
 } catch (e) {
-    console.error("❌ ERROR: Could not parse NOTARY_SECRET.");
+    console.error("ERROR: Could not parse NOTARY_SECRET.");
 }
 
 // ---- Connection ----
@@ -73,7 +72,6 @@ const fetchWalletData = async (address: string) => {
     );
     const transactions: any[] = [];
     const positions: any[] = [];
-    const timestamps: number[] = [];
 
     for (const sigInfo of signatures) {
         try {
@@ -84,7 +82,6 @@ const fetchWalletData = async (address: string) => {
                 })
             );
             if (!tx || !tx.meta) continue;
-            if (sigInfo.blockTime) timestamps.push(sigInfo.blockTime);
 
             const accountIndex = tx.transaction.message.accountKeys.findIndex(
                 (key: any) => key.pubkey.toBase58() === address
@@ -101,7 +98,7 @@ const fetchWalletData = async (address: string) => {
             }
         } catch (err) { continue; }
     }
-    return { transactions, positions, timestamps, signatures };
+    return { transactions, positions, signatures };
 };
 
 // ---- Express App ----
@@ -236,10 +233,10 @@ app.post('/api/verify', async (req: any, res: any) => {
                 .signers([NOTARY_KEYPAIR])
                 .rpc();
 
-            console.log(`✅ Notarized ${address}: ${signature}`);
+            console.log(`Notarized ${address}: ${signature}`);
         } catch (notaryErr: any) {
             // Don't fail the whole request if notarization fails
-            console.warn(`⚠️ Notarization skipped: ${notaryErr.message}`);
+            console.warn(`Notarization skipped: ${notaryErr.message}`);
         }
 
         const end = performance.now();
@@ -261,9 +258,9 @@ app.post('/api/verify', async (req: any, res: any) => {
 
     } catch (error: any) {
         console.error("Verification error:", error);
-        return res.json({
-            status: 'OFFLINE',
-            scores: { gini: 0, hhi: 0, syncIndex: 0 }
+        return res.status(500).json({
+            error: 'Internal Server Error',
+            details: error instanceof Error ? error.message : 'Unknown error'
         });
     }
 });
