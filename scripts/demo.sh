@@ -14,7 +14,7 @@ alert_user() {
     paplay /usr/share/sounds/freedesktop/stereo/complete.oga 2>/dev/null || echo -e "\a"
 }
 
-DEMO_WALLET="2XZ4miE9hkxq24oycRhBNgoSepRDEk8QdmnHo1QSz3q8"
+DEMO_WALLET="GAZDwoHW6x4QCaWXizhckqta6v7nFYEFg2aULTk52k7b"
 BACKEND_URL="https://trustchain-sovereign-backend.vercel.app"
 
 # --- 1. START BUFFER ---

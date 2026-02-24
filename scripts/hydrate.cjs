@@ -12,7 +12,8 @@ async function sendVaried() {
     }
 
     const connection = new Connection(process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com", "confirmed");
-    const target = new PublicKey("2XZ4miE9hkxq24oycRhBNgoSepRDEk8QdmnHo1QSz3q8");
+    const targetAddress = process.argv[2] || "GAZDwoHW6x4QCaWXizhckqta6v7nFYEFg2aULTk52k7b";
+    const target = new PublicKey(targetAddress);
 
     const secretKey = Uint8Array.from(secretString.replace(/[\[\]\s]/g, '').split(',').map(Number));
     const mainWallet = Keypair.fromSecretKey(secretKey);
