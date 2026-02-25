@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
-import { Connection, Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
+import { ComputeBudgetProgram, Connection, Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
 import { performance } from "perf_hooks";
 import * as anchor from '@coral-xyz/anchor';
 const { Program, AnchorProvider, Wallet } = anchor;
@@ -21,6 +21,7 @@ import { calculateGini, calculateHHI, calculateVoterWeight } from './integrityEn
 import { getFairScore, calculateTotalScore } from './services/reputationEngine.js';
 // @ts-ignore
 import { fetchWithRetry } from './utils/rpc.js';
+import { PRIORITY_FEE_CONFIG } from './src/config/constants.js';
 
 // ---- Environment ----
 // Prioritize .env.local over .env to support local overrides
@@ -325,6 +326,9 @@ app.post('/api/verify', async (req: any, res: any) => {
                     targetUser: targetPubkey,
                     systemProgram: SystemProgram.programId,
                 })
+                .preInstructions([
+                    ComputeBudgetProgram.setComputeUnitPrice(PRIORITY_FEE_CONFIG)
+                ])
                 .signers([NOTARY_KEYPAIR])
                 .rpc();
 
