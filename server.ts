@@ -17,7 +17,7 @@ const __dirname = path.dirname(__filename);
 const IDL = require('./idl/trustchain_notary.json');
 
 // @ts-ignore
-import { calculateGini, calculateHHI } from './integrityEngine.js';
+import { calculateGini, calculateHHI, calculateVoterWeight } from './integrityEngine.js';
 import { getFairScore, calculateTotalScore } from './services/reputationEngine.js';
 // @ts-ignore
 import { fetchWithRetry } from './utils/rpc.js';
@@ -101,6 +101,49 @@ const fetchWalletData = async (address: string) => {
     return { transactions, positions, signatures };
 };
 
+const getVerificationData = async (address: string) => {
+    const data = await fetchWalletData(address);
+    const gini = calculateGini(data.transactions);
+    const hhi = calculateHHI(data.positions);
+
+    const giniScore = Math.min(Math.floor(gini * 10000), 65535);
+    const hhiScore = Math.min(Math.floor(hhi * 10000), 65535);
+    const txCount = data.signatures.length;
+
+    // Status logic
+    let status: string;
+    if (txCount < 3) {
+        status = 'PROBATIONARY';
+    } else if (gini > 0.9) {
+        status = 'SYBIL';
+    } else if (gini < 0.3) {
+        status = 'VERIFIED';
+    } else {
+        status = 'PROBATIONARY';
+    }
+
+    const statusNum = status === 'VERIFIED' ? 0 : status === 'PROBATIONARY' ? 1 : 2;
+
+    // Weighted Logic Integration
+    const fairScore = await getFairScore(address);
+    // TrustChain Score: (1 - Gini) * 100
+    const trustChainScore = Math.max(0, Math.round((1 - Math.min(gini, 1)) * 100));
+    const totalScore = calculateTotalScore(trustChainScore, fairScore);
+
+    return {
+        gini,
+        hhi,
+        giniScore,
+        hhiScore,
+        txCount,
+        status,
+        statusNum,
+        fairScore,
+        trustChainScore,
+        totalScore
+    };
+};
+
 // ---- Express App ----
 const app = express();
 
@@ -162,6 +205,59 @@ app.get('/api/pool/:id/integrity', async (req: any, res: any) => {
     }
 });
 
+// Read-only verification check
+app.get('/api/verify/:wallet', async (req: any, res: any) => {
+    const { wallet } = req.params;
+    const start = performance.now();
+
+    if (!validateAddress(wallet)) {
+        return res.status(400).json({ status: 'INVALID_ADDRESS' });
+    }
+
+    try {
+        const {
+            gini,
+            hhi,
+            txCount,
+            status,
+            fairScore,
+            trustChainScore,
+            totalScore
+        } = await getVerificationData(wallet);
+
+        const end = performance.now();
+        const weightMultiplier = calculateVoterWeight(totalScore, hhi);
+
+        return res.json({
+            wallet,
+            status,
+            scores: {
+                gini,
+                hhi,
+                syncIndex: 0,
+                totalScore,
+                fairScore,
+                trustChainScore
+            },
+            governance: {
+                voterWeightMultiplier: weightMultiplier,
+                isQualified: weightMultiplier > 0,
+                tier: weightMultiplier >= 1.5 ? "Steward" : weightMultiplier >= 1.0 ? "Verified" : "Probationary"
+            },
+            txCount,
+            signature: null,
+            latencyMs: Math.round(end - start)
+        });
+
+    } catch (error: any) {
+        console.error("Verification error:", error);
+        return res.status(500).json({
+            error: 'Internal Server Error',
+            details: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+});
+
 // Wallet verification + on-chain notarization
 app.post('/api/verify', async (req: any, res: any) => {
     const { address } = req.body;
@@ -179,33 +275,18 @@ app.post('/api/verify', async (req: any, res: any) => {
     }
 
     try {
-        const data = await fetchWalletData(address);
-        const gini = calculateGini(data.transactions);
-        const hhi = calculateHHI(data.positions);
-
-        const giniScore = Math.min(Math.floor(gini * 10000), 65535);
-        const hhiScore = Math.min(Math.floor(hhi * 10000), 65535);
-        const txCount = data.signatures.length;
-
-        // Status logic
-        let status: string;
-        if (txCount < 3) {
-            status = 'PROBATIONARY';
-        } else if (gini > 0.9) {
-            status = 'SYBIL';
-        } else if (gini < 0.3) {
-            status = 'VERIFIED';
-        } else {
-            status = 'PROBATIONARY';
-        }
-
-        const statusNum = status === 'VERIFIED' ? 0 : status === 'PROBATIONARY' ? 1 : 2;
-
-        // Weighted Logic Integration
-        const fairScore = await getFairScore(address);
-        // TrustChain Score: (1 - Gini) * 100
-        const trustChainScore = Math.max(0, Math.round((1 - Math.min(gini, 1)) * 100));
-        const totalScore = calculateTotalScore(trustChainScore, fairScore);
+        const {
+            gini,
+            hhi,
+            giniScore,
+            hhiScore,
+            txCount,
+            status,
+            statusNum,
+            fairScore,
+            trustChainScore,
+            totalScore
+        } = await getVerificationData(address);
 
         // On-chain notarization
         let signature: string | null = null;
@@ -240,6 +321,7 @@ app.post('/api/verify', async (req: any, res: any) => {
         }
 
         const end = performance.now();
+        const weightMultiplier = calculateVoterWeight(totalScore, hhi);
 
         return res.json({
             status,
@@ -250,6 +332,11 @@ app.post('/api/verify', async (req: any, res: any) => {
                 totalScore,
                 fairScore,
                 trustChainScore
+            },
+            governance: {
+                voterWeightMultiplier: weightMultiplier,
+                isQualified: weightMultiplier > 0,
+                tier: weightMultiplier >= 1.5 ? "Steward" : weightMultiplier >= 1.0 ? "Verified" : "Probationary"
             },
             txCount,
             signature,
