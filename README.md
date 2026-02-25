@@ -25,6 +25,17 @@ Standardized the transaction scan limit at **15 transactions**. This provides su
 **Anchor Notary Identity Stabilization**  
 Behavioral integrity scores (Gini/HHI) are now notarized to Solana PDAs using the established Notary Identity (`JCq7...`). This creates a cryptographically verifiable, persistent link between a wallet's on-chain behavioral history and its governance standing — queryable by any external Solana protocol without an API call.
 
+## [2026-02-25] Institutional Hardening Update (v2.2.1)
+
+### 🤖 The Risk Auditor Agent
+- **Autonomous Gating:** Integrated `RiskAuditorAgent.js` to provide grounded behavioral auditing.
+- **Threshold Hardening:** Set `PROBATIONARY_SYNC_INDEX_THRESHOLD` at **0.35** and `GINI_THRESHOLD` at **0.7** to capture sophisticated Sybil clusters.
+- **Non-Blocking Notarization:** Decisions are now notarized to the Solana PDA as an asynchronous side-effect, ensuring sub-2,000ms response times.
+
+### ⚡ Infrastructure & Performance
+- **Helius gRPC Migration:** Fully transitioned to Yellowstone (gRPC) to eliminate RPC tail latency.
+- **The "Goldilocks" Scan:** Standardized on a 15-transaction "DNA Profile" scan window—optimizing for 95%+ forensic accuracy without hitting I/O bottlenecks.
+- **Temporal Sentinel:** Hardened the 2,000ms sync window for behavioral integrity scores.
 ---
 
 ## What This Is
