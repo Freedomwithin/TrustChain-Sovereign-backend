@@ -12,6 +12,21 @@
 
 ---
 
+## Updates
+
+### February 2026 — Sovereign Integration
+
+**Helius RPC Migration**  
+Transitioned from the default Solana devnet RPC to **Helius RPC** for high-fidelity transaction indexing. Helius provides the metadata depth required for accurate Gini/HHI calculations — particularly for parsing pre/post balances and instruction-level data that standard RPC endpoints throttle or drop under load.
+
+**Latency-Optimized Transaction Scans**  
+Standardized the transaction scan limit at **15 transactions**. This provides sufficient behavioral variance for the Gini engine to produce meaningful scores while keeping responses within the Temporal Sentinel's 2,000ms sync window. The 15-tx ceiling also prevents RPC rate-limiting during high-concurrency periods (e.g., judging, demos, or Fairathon evaluation windows).
+
+**Anchor Notary Identity Stabilization**  
+Behavioral integrity scores (Gini/HHI) are now notarized to Solana PDAs using the established Notary Identity (`JCq7...`). This creates a cryptographically verifiable, persistent link between a wallet's on-chain behavioral history and its governance standing — queryable by any external Solana protocol without an API call.
+
+---
+
 ## What This Is
 
 TrustChain-Sovereign is a **read-only behavioral firewall and reputation layer** for Solana DeFi. It addresses the *Sybil Gap* — the inability of on-chain protocols to distinguish genuine liquidity providers from bot-operated wallets — by combining FairScale's social reputation layer with proprietary on-chain behavioral analysis.
@@ -106,6 +121,7 @@ The demo uses a **behavioral hydration script** to simulate wallet transaction p
 | Runtime | Node.js / TypeScript |
 | Framework | Express |
 | Blockchain | Solana — Anchor, @solana/web3.js |
+| RPC | Helius (High-Fidelity Indexing) |
 | Reputation | FairScale API + TrustChain Gini/HHI Engine |
 | Deployment | Vercel (Production) |
 | SDK | `@trustchain/web3-react` — `useTrustChain()` hook |
