@@ -12,30 +12,41 @@
 
 ---
 
+## Judging Quick-Start
+
+To replicate the full behavioral notarization and governance simulation in under 5 minutes, please follow the [Quick-Start Demo Guide](QUICKSTART_judges.md).
+
+---
+
 ## Updates
+
+### 2026-02-25 — Institutional Hardening (v2.2.1)
+
+**Risk Auditor Agent**  
+Integrated `RiskAuditorAgent.js` to provide autonomous behavioral auditing. Thresholds are hardened at `PROBATIONARY_SYNC_INDEX_THRESHOLD: 0.35` and `GINI_THRESHOLD: 0.7` to capture sophisticated Sybil clusters that evade single-metric detection.
+
+**Non-Blocking Notarization**  
+Notarization decisions are now written to the Solana PDA as an asynchronous side-effect rather than blocking the response cycle, ensuring sub-2,000ms response times under all load conditions.
+
+**Helius gRPC Migration**  
+Fully transitioned to Yellowstone (gRPC) to eliminate RPC tail latency. The previous HTTP/JSON RPC path is retired.
+
+**The "Goldilocks" Scan Window**  
+Standardized on a 15-transaction DNA Profile scan — calibrated for 95%+ forensic accuracy without hitting I/O bottlenecks or triggering rate limits during high-concurrency evaluation periods.
+
+---
 
 ### February 2026 — Sovereign Integration
 
 **Helius RPC Migration**  
-Transitioned from the default Solana devnet RPC to **Helius RPC** for high-fidelity transaction indexing. Helius provides the metadata depth required for accurate Gini/HHI calculations — particularly for parsing pre/post balances and instruction-level data that standard RPC endpoints throttle or drop under load.
+Transitioned to **Helius RPC** to ensure high-fidelity indexing of Solana balance metadata. Standard RPC endpoints throttle or drop the pre/post balance data required for accurate Gini/HHI behavioral scoring — Helius resolves this at the infrastructure level.
 
-**Latency-Optimized Transaction Scans**  
-Standardized the transaction scan limit at **15 transactions**. This provides sufficient behavioral variance for the Gini engine to produce meaningful scores while keeping responses within the Temporal Sentinel's 2,000ms sync window. The 15-tx ceiling also prevents RPC rate-limiting during high-concurrency periods (e.g., judging, demos, or Fairathon evaluation windows).
+**Latency Optimization**  
+Standardized the transaction scan limit at **15 transactions** to balance data variance with performance. This keeps the Temporal Sentinel sync window within its 2,000ms threshold while providing sufficient behavioral signal for the Gini engine to produce meaningful scores.
 
-**Anchor Notary Identity Stabilization**  
-Behavioral integrity scores (Gini/HHI) are now notarized to Solana PDAs using the established Notary Identity (`JCq7...`). This creates a cryptographically verifiable, persistent link between a wallet's on-chain behavioral history and its governance standing — queryable by any external Solana protocol without an API call.
+**Notary Identity Stabilization**  
+On-chain notarization is now locked to the `JCq7...` Notary identity. This creates a persistent, cryptographically verifiable link between a wallet's behavioral history and its governance power — queryable by any external Solana protocol directly from the ledger.
 
-## [2026-02-25] Institutional Hardening Update (v2.2.1)
-
-### 🤖 The Risk Auditor Agent
-- **Autonomous Gating:** Integrated `RiskAuditorAgent.js` to provide grounded behavioral auditing.
-- **Threshold Hardening:** Set `PROBATIONARY_SYNC_INDEX_THRESHOLD` at **0.35** and `GINI_THRESHOLD` at **0.7** to capture sophisticated Sybil clusters.
-- **Non-Blocking Notarization:** Decisions are now notarized to the Solana PDA as an asynchronous side-effect, ensuring sub-2,000ms response times.
-
-### ⚡ Infrastructure & Performance
-- **Helius gRPC Migration:** Fully transitioned to Yellowstone (gRPC) to eliminate RPC tail latency.
-- **The "Goldilocks" Scan:** Standardized on a 15-transaction "DNA Profile" scan window—optimizing for 95%+ forensic accuracy without hitting I/O bottlenecks.
-- **Temporal Sentinel:** Hardened the 2,000ms sync window for behavioral integrity scores.
 ---
 
 ## What This Is
