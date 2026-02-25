@@ -39,7 +39,7 @@ export class RiskAuditorAgent {
     }
 
     // 3. New Identity Guard
-    if (data.syncIndex === 0 && data.gini === 0) {
+    if (data.syncIndex === 0 && data.gini === 0 && solBalance <= RiskAuditorAgent.MIN_SOL_STAKE) {
       return {
         status: 'PROBATIONARY',
         score: data,

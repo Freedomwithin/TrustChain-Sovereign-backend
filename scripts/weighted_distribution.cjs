@@ -70,8 +70,10 @@ async function sendWeighted() {
             console.error(`⚠️  Transaction ${i+1} failed: ${error.message}`);
         }
 
-        // Small delay to simulate organic timing and avoid rate limits
-        await new Promise(r => setTimeout(r, 1500));
+        // Randomized delay (500ms - 2500ms) to simulate organic timing and avoid rate limits
+        // Target 0.15 sync index requires variance.
+        const delay = Math.floor(Math.random() * 2000) + 500;
+        await new Promise(r => setTimeout(r, delay));
     }
     console.log("\n✨ Weighted Distribution established. The Gini Engine now has low-variance data.");
 }
