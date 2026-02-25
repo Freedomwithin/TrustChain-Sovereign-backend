@@ -98,4 +98,20 @@ const checkLpEligibility = async (fairScoreTier, walletEvents) => {
   return { eligible: true, gini };
 };
 
-export { calculateGini, calculateHHI, calculateSyncIndex, checkLpEligibility };
+/**
+ * Calculates the DAO Governance multiplier based on TrustChain behavioral integrity.
+ * This is the value that will eventually be notarized to the on-chain PDA.
+ *
+ * Logic Update:
+ * - HHI > 0.8 triggers "Probationary" (0.1x) to mitigate whale dominance.
+ * - Score 0 is always "Blocked".
+ */
+const calculateVoterWeight = (score, hhi = 0) => {
+    if (score <= 0) return 0.0;
+    if (hhi > 0.8) return 0.1; // Whale anti-concentration mechanism
+    if (score >= 85) return 1.5;
+    if (score >= 40) return 1.0;
+    return 0.1;
+};
+
+export { calculateGini, calculateHHI, calculateSyncIndex, checkLpEligibility, calculateVoterWeight };
