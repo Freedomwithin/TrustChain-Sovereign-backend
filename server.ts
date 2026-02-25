@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
-import { Connection, Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
+import { ComputeBudgetProgram, Connection, Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
 import { performance } from "perf_hooks";
 import * as anchor from '@coral-xyz/anchor';
 const { Program, AnchorProvider, Wallet } = anchor;
@@ -325,6 +325,9 @@ app.post('/api/verify', async (req: any, res: any) => {
                     targetUser: targetPubkey,
                     systemProgram: SystemProgram.programId,
                 })
+                .preInstructions([
+                    ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 15000 })
+                ])
                 .signers([NOTARY_KEYPAIR])
                 .rpc();
 

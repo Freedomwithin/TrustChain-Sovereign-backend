@@ -17,6 +17,7 @@ dotenv.config();
 const IDL = require('../idl/trustchain_notary.json');
 
 import {
+    ComputeBudgetProgram,
     Connection,
     Keypair,
     PublicKey,
@@ -144,6 +145,9 @@ async function syncNotary() {
                 targetUser: TARGET_WALLET,
                 systemProgram: SystemProgram.programId,
             })
+            .preInstructions([
+                ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 15000 })
+            ])
             .signers([NOTARY_KEYPAIR])
             .rpc();
 
