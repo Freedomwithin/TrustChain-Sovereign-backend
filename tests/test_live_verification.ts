@@ -1,5 +1,8 @@
-import { getVerificationData } from '../server.js'; // Ensure .js extension for imports
-import { calculateVoterWeight } from '../integrityEngine.js';
+import { getVerificationData } from '../server';
+import { calculateVoterWeight } from '../integrityEngine';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 const TEST_WALLET = "GAZDwoHW6x4QCaWXizhckqta6v7nFYEFg2aULTk52k7b";
 
@@ -15,9 +18,8 @@ async function runTest() {
 
         if (result.gini === 0 && result.status === 'PROBATIONARY') {
             console.log("\n⚠️  Issue Detected: Gini is 0 but status is PROBATIONARY.");
-            console.log("TrustChain Score:", result.trustChainScore); // (1 - 0) * 100 = 100
+            console.log("TrustChain Score:", result.trustChainScore);
             console.log("Total Score:", result.totalScore);
-            // If Total Score is high, calculateVoterWeight will be high.
         }
 
     } catch (error) {
