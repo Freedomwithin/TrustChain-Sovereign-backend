@@ -67,21 +67,21 @@ const validateAddress = (address: string) => {
 
 const fetchWalletData = async (address: string) => {
     const pubKey = new PublicKey(address);
+    // Reduce limit to 15 to improve performance and avoid rate limits
     const signatures = await fetchWithRetry(() =>
-        connection.getSignaturesForAddress(pubKey, { limit: 20 })
+        connection.getSignaturesForAddress(pubKey, { limit: 15 })
     );
     const transactions: any[] = [];
     const positions: any[] = [];
 
-    for (const sigInfo of signatures) {
+    const processSignature = async (sigInfo: any) => {
         try {
-            await delay(500);
             const tx = await fetchWithRetry(() =>
                 connection.getParsedTransaction(sigInfo.signature, {
                     maxSupportedTransactionVersion: 0
                 })
             );
-            if (!tx || !tx.meta) continue;
+            if (!tx || !tx.meta) return;
 
             const accountIndex = tx.transaction.message.accountKeys.findIndex(
                 (key: any) => key.pubkey.toBase58() === address
@@ -96,12 +96,24 @@ const fetchWalletData = async (address: string) => {
                     positions.push(amount);
                 }
             }
-        } catch (err) { continue; }
+        } catch (err) {
+            console.warn(`Failed to fetch tx ${sigInfo.signature}:`, err);
+        }
+    };
+
+    const CONCURRENCY_LIMIT = 3;
+    for (let i = 0; i < signatures.length; i += CONCURRENCY_LIMIT) {
+        const batch = signatures.slice(i, i + CONCURRENCY_LIMIT);
+        await Promise.all(batch.map(processSignature));
+        if (i + CONCURRENCY_LIMIT < signatures.length) {
+            await delay(200);
+        }
     }
+
     return { transactions, positions, signatures };
 };
 
-const getVerificationData = async (address: string) => {
+export const getVerificationData = async (address: string) => {
     const data = await fetchWalletData(address);
     const gini = calculateGini(data.transactions);
     const hhi = calculateHHI(data.positions);
@@ -112,7 +124,7 @@ const getVerificationData = async (address: string) => {
 
     // Status logic
     let status: string;
-    if (txCount < 3) {
+    if (txCount < 3 || data.transactions.length < 2) {
         status = 'PROBATIONARY';
     } else if (gini > 0.9) {
         status = 'SYBIL';
@@ -127,7 +139,13 @@ const getVerificationData = async (address: string) => {
     // Weighted Logic Integration
     const fairScore = await getFairScore(address);
     // TrustChain Score: (1 - Gini) * 100
-    const trustChainScore = Math.max(0, Math.round((1 - Math.min(gini, 1)) * 100));
+    let trustChainScore = Math.max(0, Math.round((1 - Math.min(gini, 1)) * 100));
+
+    // Fix: If insufficient transaction data, set TrustChain Score to 0 (baseline)
+    if (data.transactions.length < 2) {
+        trustChainScore = 0;
+    }
+
     const totalScore = calculateTotalScore(trustChainScore, fairScore);
 
     return {
