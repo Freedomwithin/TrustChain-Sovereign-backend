@@ -22,22 +22,17 @@ import { getFairScore, calculateTotalScore } from './services/reputationEngine.j
 // @ts-ignore
 import { fetchWithRetry } from './utils/rpc.js';
 
-dotenv.config();
-
 // ---- Environment ----
-// Prioritize existing environment variables to support Edge/Serverless runtimes
-if (!process.env.NOTARY_SECRET) {
-    const envPaths = [
-        path.resolve(__dirname, ".env.local"),
-        path.resolve(__dirname, ".env"),
-    ];
-    for (const envPath of envPaths) {
-        if (fs.existsSync && fs.existsSync(envPath)) {
-            dotenv.config({ path: envPath });
-            break;
-        }
+// Prioritize .env.local over .env to support local overrides
+const envFiles = [".env.local", ".env"];
+for (const file of envFiles) {
+    const envPath = path.resolve(__dirname, file);
+    if (fs.existsSync(envPath)) {
+        dotenv.config({ path: envPath });
     }
 }
+// Ensure standard .env from CWD is loaded if not already covered
+dotenv.config();
 
 // ---- Notary Keypair ----
 let NOTARY_KEYPAIR: Keypair | null = null;
@@ -52,6 +47,7 @@ try {
 
 // ---- Connection ----
 const rpcUrl = process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com";
+console.log(`[TrustChain] Connecting to RPC: ${rpcUrl}`);
 const connection = new Connection(rpcUrl, "confirmed");
 
 const PROGRAM_ID = new PublicKey(
