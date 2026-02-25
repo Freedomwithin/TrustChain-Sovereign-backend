@@ -101,7 +101,7 @@ const fetchWalletData = async (address: string) => {
     return { transactions, positions, signatures };
 };
 
-const getVerificationData = async (address: string) => {
+export const getVerificationData = async (address: string) => {
     const data = await fetchWalletData(address);
     const gini = calculateGini(data.transactions);
     const hhi = calculateHHI(data.positions);
