@@ -30,6 +30,7 @@ const { Program, AnchorProvider, Wallet } = anchor;
 import { calculateGini, calculateHHI } from './integrityEngine.js';
 // @ts-ignore (Assuming this is in your utils/ folder)
 import { fetchWithRetry } from '../utils/rpc.js';
+import { PRIORITY_FEE_CONFIG } from '../src/config/constants.js';
 
 // 4. Resolve Environment (The Sentinel loading logic)
 const envPaths = [
@@ -146,7 +147,7 @@ async function syncNotary() {
                 systemProgram: SystemProgram.programId,
             })
             .preInstructions([
-                ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 15000 })
+                ComputeBudgetProgram.setComputeUnitPrice(PRIORITY_FEE_CONFIG)
             ])
             .signers([NOTARY_KEYPAIR])
             .rpc();

@@ -21,6 +21,7 @@ import { calculateGini, calculateHHI, calculateVoterWeight } from './integrityEn
 import { getFairScore, calculateTotalScore } from './services/reputationEngine.js';
 // @ts-ignore
 import { fetchWithRetry } from './utils/rpc.js';
+import { PRIORITY_FEE_CONFIG } from './src/config/constants.js';
 
 // ---- Environment ----
 // Prioritize .env.local over .env to support local overrides
@@ -326,7 +327,7 @@ app.post('/api/verify', async (req: any, res: any) => {
                     systemProgram: SystemProgram.programId,
                 })
                 .preInstructions([
-                    ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 15000 })
+                    ComputeBudgetProgram.setComputeUnitPrice(PRIORITY_FEE_CONFIG)
                 ])
                 .signers([NOTARY_KEYPAIR])
                 .rpc();
