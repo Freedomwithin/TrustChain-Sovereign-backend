@@ -38,6 +38,8 @@ async function sendWeighted() {
     // Goal: HHI < 0.10, Gini ~ 0
     const count = 15;
     const baseAmount = 0.1;
+    const MIN_DELAY_MS = 500;
+    const MAX_DELAY_MS = 2500;
     const amounts = [];
 
     console.log(`🧪 Generating ${count} transactions for organic weighted distribution...`);
@@ -70,9 +72,9 @@ async function sendWeighted() {
             console.error(`⚠️  Transaction ${i+1} failed: ${error.message}`);
         }
 
-        // Randomized delay (500ms - 2500ms) to simulate organic timing and avoid rate limits
+        // Randomized delay to simulate organic timing and avoid rate limits
         // Target 0.15 sync index requires variance.
-        const delay = Math.floor(Math.random() * 2000) + 500;
+        const delay = Math.floor(Math.random() * (MAX_DELAY_MS - MIN_DELAY_MS)) + MIN_DELAY_MS;
         await new Promise(r => setTimeout(r, delay));
     }
     console.log("\n✨ Weighted Distribution established. The Gini Engine now has low-variance data.");
