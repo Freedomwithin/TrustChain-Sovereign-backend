@@ -19,6 +19,10 @@ export class RiskAuditorAgent {
   // Lowered floor to 0.05 to prevent "Balance Stress" during demo
   static readonly MIN_SOL_STAKE = 0.05;
 
+  /**
+   * @param data - The temporal observer data (gini, hhi, syncIndex)
+   * @param solBalance - The wallet balance in SOL (not Lamports)
+   */
   public evaluate(data: TemporalObserver, solBalance: number): IntegrityDecision {
     // 1. Economic Stake Check
     if (solBalance < RiskAuditorAgent.MIN_SOL_STAKE) {
@@ -39,7 +43,7 @@ export class RiskAuditorAgent {
     }
 
     // 3. New Identity Guard
-    if (data.syncIndex === 0 && data.gini === 0) {
+    if (data.syncIndex === 0 && data.gini === 0 && solBalance <= RiskAuditorAgent.MIN_SOL_STAKE) {
       return {
         status: 'PROBATIONARY',
         score: data,
