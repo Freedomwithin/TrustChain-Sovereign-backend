@@ -18,6 +18,24 @@ To replicate the full behavioral notarization and governance simulation in under
 
 ---
 
+## 🏛️ Sovereign Architecture & Strategy
+
+Since the initial submission, TrustChain has undergone a **Sovereign Hardening** phase to move from prototype heuristics to an institutional-grade security primitive.
+
+### 📊 Roadmap & Technical Pitch
+
+For a deep dive into the **Gini/HHI Dual Gatekeeper** math, our **Helius gRPC pipeline**, and the **90-day Shadow Audit Roadmap**, refer to our strategic documentation:
+
+- **[View Technical Pitch & Roadmap (PPTX)](./docs/TrustChain_Sovereign_Deck.pptx)**
+
+### ⚡ Infrastructure Upgrades
+
+- **Helius gRPC (Yellowstone):** Migrated to a direct data-push stream to maintain a deterministic **3,000ms sync window**.
+- **Anchor Notary Bridge:** All behavioral integrity scores are notarized to on-chain **PDAs**, making reputation a composable and immutable primitive on Solana.
+- **Gini/HHI Forensics:** Implementation of macro-economic concentration indices to detect coordinated clusters rather than isolated wallets.
+
+---
+
 ## Updates
 
 ### 2026-02-25 — Institutional Hardening (v2.2.1)
