@@ -3,10 +3,11 @@
 # TrustChain-Sovereign: Backend
 ### Solana-Native Behavioral Firewall & Reputation Engine
 
-**Live Demo:** [Watch the Full System Demo on Vimeo](https://vimeo.com/1167869054)  
-**Live Backend:** [trustchain-sovereign-backend.vercel.app](https://trustchain-sovereign-backend.vercel.app)  
+**Live Interface:** [trustchainsovereign.com](https://trustchainsovereign.com)  
+**System Demo:** [Watch the Full System Demo on Vimeo](https://vimeo.com/1167869054)  
+**Legacy Endpoint:** [trustchain-sovereign-frontend.vercel.app](https://trustchain-sovereign-frontend.vercel.app)  
 **Project Status:** Institutional Hardening (Production-Ready)  
-**Build Version:** 2.2.1-Sovereign (Hardened)
+**Build Version:** 2.1.5-Sovereign (Hardened)
 
 </div>
 
