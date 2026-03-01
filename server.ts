@@ -17,7 +17,7 @@ const __dirname = path.dirname(__filename);
 const IDL = require('./idl/trustchain_notary.json');
 
 // @ts-ignore
-import { calculateGini, calculateHHI, calculateVoterWeight } from './integrityEngine.js';
+import { calculateGini, calculateHHI, calculateVoterWeight, calculateSyncIndex } from './integrityEngine.js';
 import { getFairScore, calculateTotalScore } from './services/reputationEngine.js';
 // @ts-ignore
 import { fetchWithRetry } from './utils/rpc.js';
@@ -70,6 +70,7 @@ const fetchWalletData = async (address: string) => {
     );
     const transactions: any[] = [];
     const positions: any[] = [];
+    const timestamps: number[] = [];
 
     const processSignature = async (sigInfo: any) => {
         try {
@@ -91,6 +92,7 @@ const fetchWalletData = async (address: string) => {
                 if (amount > 0) {
                     transactions.push(amount);
                     positions.push(amount);
+                    if (tx.blockTime) timestamps.push(tx.blockTime);
                 }
             }
         } catch (err) {
@@ -107,13 +109,14 @@ const fetchWalletData = async (address: string) => {
         }
     }
 
-    return { transactions, positions, signatures };
+    return { transactions, positions, signatures, timestamps };
 };
 
 export const getVerificationData = async (address: string) => {
     const data = await fetchWalletData(address);
     const gini = calculateGini(data.transactions);
     const hhi = calculateHHI(data.positions);
+    const syncIndex = calculateSyncIndex(data.timestamps);
 
     const giniScore = Math.min(Math.floor(gini * 10000), 65535);
     const hhiScore = Math.min(Math.floor(hhi * 10000), 65535);
@@ -123,6 +126,8 @@ export const getVerificationData = async (address: string) => {
     let status: string;
     if (txCount < 3 || data.transactions.length < 2) {
         status = 'PROBATIONARY';
+    } else if (syncIndex > 0.8) {
+        status = 'SYBIL'; // High sync index means highly robotic/synchronized
     } else if (gini > 0.9) {
         status = 'SYBIL';
     } else if (gini < 0.3) {
@@ -148,6 +153,7 @@ export const getVerificationData = async (address: string) => {
     return {
         gini,
         hhi,
+        syncIndex,
         giniScore,
         hhiScore,
         txCount,
@@ -233,6 +239,7 @@ app.get('/api/verify/:wallet', async (req: any, res: any) => {
         const {
             gini,
             hhi,
+            syncIndex,
             txCount,
             status,
             fairScore,
@@ -249,7 +256,7 @@ app.get('/api/verify/:wallet', async (req: any, res: any) => {
             scores: {
                 gini,
                 hhi,
-                syncIndex: 0,
+                syncIndex,
                 totalScore,
                 fairScore,
                 trustChainScore
@@ -293,6 +300,7 @@ app.post('/api/verify', async (req: any, res: any) => {
         const {
             gini,
             hhi,
+            syncIndex,
             giniScore,
             hhiScore,
             txCount,
@@ -346,7 +354,7 @@ app.post('/api/verify', async (req: any, res: any) => {
             scores: {
                 gini,
                 hhi,
-                syncIndex: 0,
+                syncIndex,
                 totalScore,
                 fairScore,
                 trustChainScore
