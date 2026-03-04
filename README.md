@@ -19,11 +19,11 @@ To replicate the full behavioral notarization and governance simulation in under
 
 ---
 
-## 🏛️ Sovereign Architecture & Strategy
+##  Sovereign Architecture & Strategy
 
 Since the initial submission, TrustChain has undergone a **Sovereign Hardening** phase to move from prototype heuristics to an institutional-grade security primitive.
 
-### 📊 Roadmap & Technical Pitch
+###  Roadmap & Technical Pitch
 
 For a deep dive into the **Gini/HHI Dual Gatekeeper** math, our **Helius gRPC pipeline**, and the **90-day Shadow Audit Roadmap**, refer to our strategic documentation:
 
@@ -39,7 +39,7 @@ For a deep dive into the **Gini/HHI Dual Gatekeeper** math, our **Helius gRPC pi
 
 ## Updates
 
-### 🏛️ Audit & Commit History
+###  Audit & Commit History
 This repository represents the consolidated **Sovereign Hardening** phase. The full audit trail of our development journey—from initial proof-of-concept to the current gRPC implementation—is preserved in the original development roots:
 * **[TrustChain Core](https://github.com/Freedomwithin/TrustChain)** — *Early behavioral logic and proof-of-concept.*
 * **[TrustChain Sovereign](https://github.com/Freedomwithin/TrustChain-Sovereign)** — *Infrastructure hardening and gRPC integration.*
