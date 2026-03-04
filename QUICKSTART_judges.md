@@ -9,8 +9,10 @@
 ---
 
 ### Step 1 — Initialize Environment
+Ensure your local Solana environment is set to Devnet. While the demo natively tracks the GAZD...2k7b identity to show established high-integrity scores, you may use any Devnet wallet. The Notary Bridge and behavioral scoring will operate against whatever transaction history is available for the connected wallet.
 
-Ensure your wallet (`GAZD...2k7b`) is active on **Solana Devnet** before beginning. The Notary Bridge and behavioral scoring operate against devnet transaction history.
+**Note on Installation:** To resolve Sovereign-specific polyfill dependencies, please install using:
+npm install --legacy-peer-deps
 
 ### Step 2 — Behavioral Hydration
 

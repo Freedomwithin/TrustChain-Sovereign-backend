@@ -17,6 +17,9 @@
 
 To replicate the full behavioral notarization and governance simulation in under 5 minutes, please follow the [Quick-Start Demo Guide](QUICKSTART_judges.md).
 
+## Security Notice
+For the protection of the TrustChain Sovereign identity (JCq7...), the official NOTARY_SECRET is not included in this repository. Judges can test the full behavioral forensics locally by providing their own Devnet key in .env, or simply observe the notarization live on the Sovereign Dashboard.
+
 ---
 
 ##  Sovereign Architecture & Strategy
