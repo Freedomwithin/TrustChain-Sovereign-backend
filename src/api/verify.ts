@@ -51,6 +51,11 @@ const PROGRAM_ID = new PublicKey(
     process.env.TRUSTCHAIN_PROGRAM_ID || "CvEK7knkMGSE4jw9HxNjHndxdChKW6XAxN4wThk3dkLT"
 );
 
+// ---- Sentinel Thresholds ----
+// Named constants for behavioral classification. Adjust for Mainnet tuning.
+const GINI_SYBIL_THRESHOLD = 0.9;
+const GINI_VERIFIED_THRESHOLD = 0.3;
+
 const validateAddress = (address: string): boolean => {
     try {
         new PublicKey(address);
@@ -83,13 +88,13 @@ export const getVerificationData = async (address: string) => {
     const hhiScore = Math.min(Math.floor(hhi * 10000), 65535);
     const txCount = data.signatures.length;
 
-    // Status logic
+    // Status logic (uses named threshold constants for Mainnet tuning)
     let status: string;
     if (txCount < 3 || data.transactions.length < 2) {
         status = 'PROBATIONARY';
-    } else if (gini > 0.9) {
+    } else if (gini > GINI_SYBIL_THRESHOLD) {
         status = 'SYBIL';
-    } else if (gini < 0.3) {
+    } else if (gini < GINI_VERIFIED_THRESHOLD) {
         status = 'VERIFIED';
     } else {
         status = 'PROBATIONARY';
