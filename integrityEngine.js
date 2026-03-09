@@ -48,9 +48,14 @@ const calculateHHI = (values) => {
  * Detects automated/bot-like behavior (highly synchronized).
  */
 const calculateSyncIndex = (timestamps) => {
-  if (!timestamps || timestamps.length < 3) return 0;
+  // Guard: require at least 3 valid numeric timestamps to produce meaningful analysis
+  if (!timestamps || !Array.isArray(timestamps) || timestamps.length < 3) return 0;
 
-  const sorted = [...timestamps].sort((a, b) => a - b);
+  // Filter out any non-finite values to prevent NaN propagation
+  const validTimestamps = timestamps.filter(t => Number.isFinite(t));
+  if (validTimestamps.length < 3) return 0;
+
+  const sorted = [...validTimestamps].sort((a, b) => a - b);
   const diffs = [];
   for (let i = 1; i < sorted.length; i++) {
     diffs.push(sorted[i] - sorted[i-1]);
