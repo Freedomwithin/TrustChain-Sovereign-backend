@@ -3,8 +3,13 @@ import { PublicKey, SystemProgram, ComputeBudgetProgram, Connection, Keypair } f
 import * as anchor from '@coral-xyz/anchor';
 import { performance } from 'perf_hooks';
 import * as dotenv from 'dotenv';
-// Import JSON directly (supported in Node 18+ and Vercel)
-import IDL from '../../idl/trustchain_notary.json' assert { type: 'json' };
+import * as fs from 'fs';
+import * as path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url as string);
+const __dirname = path.dirname(__filename);
+const IDL = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../idl/trustchain_notary.json'), 'utf8'));
 
 const { Program, AnchorProvider, Wallet } = anchor;
 
