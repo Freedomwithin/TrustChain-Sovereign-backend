@@ -11,10 +11,5 @@
             "src": "/(.*)",
             "dest": "server.ts"
         }
-    ],
-    "functions": {
-        "server.ts": {
-            "includeFiles": "idl/**"
-        }
-    }
+    ]
 }
