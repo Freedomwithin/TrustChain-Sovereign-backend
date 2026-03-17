@@ -1,4 +1,6 @@
-import Client, { CommitmentLevel } from "@triton-one/yellowstone-grpc";
+import yellowstone from "@triton-one/yellowstone-grpc";
+const Client = (yellowstone as any).default ? (yellowstone as any).default : yellowstone;
+const CommitmentLevel = (yellowstone as any).CommitmentLevel;
 import { Connection, PublicKey } from "@solana/web3.js";
 import * as dotenv from "dotenv";
 
@@ -28,7 +30,7 @@ const connection = new Connection(rpcUrl, {
 });
 
 export class SolanaGRPCService {
-    private client?: any;
+    private client: any;
     private stream: any;
     private isConnected: boolean = false;
     private isConnecting: boolean = false;
@@ -39,15 +41,9 @@ export class SolanaGRPCService {
     private walletData: Map<string, { transactions: number[], positions: number[], signatures: string[], isHydrated: boolean }> = new Map();
 
     constructor() {
-        // Initialization deferred to prevent serverless cold boot issues
-    }
-
-    private getClient() {
-        if (!this.client) {
-            const ClientConstructor = (Client as any).default || Client;
-            this.client = new ClientConstructor(GRPC_URL, undefined, undefined);
-        }
-        return this.client;
+        // Handle potential differences in ESM/CJS interop for the default export
+        const ClientConstructor = (Client as any).default || Client;
+        this.client = new ClientConstructor(GRPC_URL, undefined, undefined);
     }
 
     public async connect() {
@@ -59,7 +55,7 @@ export class SolanaGRPCService {
 
             // Await getVersion to ensure handshake is solid
             try {
-                const version = await this.getClient().getVersion();
+                const version = await this.client.getVersion();
                 console.log("gRPC Version:", version);
             } catch (err: any) {
                 console.error("gRPC Connection Error (Version check):", err.message);
@@ -71,7 +67,7 @@ export class SolanaGRPCService {
             const maxRetries = 3;
             while (retryCount < maxRetries) {
                 try {
-                    this.stream = await this.getClient().subscribe();
+                    this.stream = await this.client.subscribe();
                     break;
                 } catch (err: any) {
                     if (err.message?.includes('Client not connected') && retryCount < maxRetries - 1) {
@@ -390,7 +386,8 @@ export class SolanaGRPCService {
 }
 
 export const grpcService = new SolanaGRPCService();
-// Connection is established lazily when getWalletData is called
+// Start the connection immediately when the module is imported
+grpcService.connect();
 
 // To maintain compatibility with existing functionality
 export const fetchWalletData = async (address: string) => {

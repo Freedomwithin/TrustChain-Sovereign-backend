@@ -1,10 +1,10 @@
 import * as path from "path";
 import * as fs from "fs";
 import { fileURLToPath } from 'url';
-
+import { createRequire } from 'module';
 
 // 1. Resolve ESM/CJS compatibility for JSON imports
-
+const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -14,7 +14,7 @@ dotenv.config();
 
 // 3. Import IDL using the bridged 'require'
 // Ensure this path points to your actual JSON IDL file
-import { IDL } from '../api/idl.js';
+const IDL = require('../../idl/trustchain_notary.json');
 
 import {
     ComputeBudgetProgram,
@@ -132,7 +132,7 @@ async function syncNotary() {
         // 2. Setup Anchor Program Connection
         const wallet = new Wallet(NOTARY_KEYPAIR);
         const provider = new AnchorProvider(connection, wallet, { preflightCommitment: "confirmed" });
-        const program = new Program(IDL as anchor.Idl, PROGRAM_ID, provider);
+        const program = new Program(IDL, PROGRAM_ID, provider);
 
         // 3. Derive the PDA (Program Derived Address)
         const [userIntegrityPda] = PublicKey.findProgramAddressSync(
