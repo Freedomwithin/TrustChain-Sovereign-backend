@@ -116,7 +116,7 @@ async function syncNotary() {
 
         const wallet = new Wallet(NOTARY_KEYPAIR);
         const provider = new AnchorProvider(connection, wallet, { preflightCommitment: "confirmed" });
-        const program = new Program(IDL, PROGRAM_ID, provider);
+        const program = new Program(IDL as anchor.Idl, PROGRAM_ID, provider);
 
         // PDA ALIGNMENT: Seed must be "notary" per lib.rs
         const [userIntegrityPda] = PublicKey.findProgramAddressSync(
