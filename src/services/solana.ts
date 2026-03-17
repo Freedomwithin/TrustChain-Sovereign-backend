@@ -384,8 +384,7 @@ export class SolanaGRPCService {
 }
 
 export const grpcService = new SolanaGRPCService();
-// Start the connection immediately when the module is imported
-grpcService.connect();
+// Connection is established lazily when getWalletData is called
 
 // To maintain compatibility with existing functionality
 export const fetchWalletData = async (address: string) => {

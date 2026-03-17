@@ -3,20 +3,10 @@ import { PublicKey, SystemProgram, ComputeBudgetProgram, Connection, Keypair } f
 import * as anchor from '@coral-xyz/anchor';
 import { performance } from 'perf_hooks';
 import * as dotenv from 'dotenv';
-import { createRequire } from 'module';
-import * as path from 'path';
-import { fileURLToPath } from 'url';
-
-// Setup basic requirements that match server.ts
-dotenv.config();
+// Import JSON directly (supported in Node 18+ and Vercel)
+import IDL from '../../idl/trustchain_notary.json' assert { type: 'json' };
 
 const { Program, AnchorProvider, Wallet } = anchor;
-
-// Need to define this properly for TS to accept import.meta in some configurations
-const require = createRequire(import.meta.url as string);
-const __filename = fileURLToPath(import.meta.url as string);
-const __dirname = path.dirname(__filename);
-const IDL = require('../../idl/trustchain_notary.json');
 
 // Imports from the existing project structure
 // @ts-ignore
@@ -189,7 +179,7 @@ verifyRouter.post('/', async (req: any, res: any) => {
             const provider = new AnchorProvider(connection, wallet, {
                 preflightCommitment: "confirmed"
             });
-            const program = new Program(IDL, PROGRAM_ID, provider);
+            const program = new Program(IDL as anchor.Idl, PROGRAM_ID, provider);
 
             const targetPubkey = new PublicKey(address);
             const [userIntegrityPda] = PublicKey.findProgramAddressSync(
