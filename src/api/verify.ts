@@ -3,7 +3,9 @@ import { PublicKey, SystemProgram, ComputeBudgetProgram, Connection, Keypair } f
 import * as anchor from '@coral-xyz/anchor';
 import { performance } from 'perf_hooks';
 import * as dotenv from 'dotenv';
-import { IDL } from '../../idl/trustchain_notary.js';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const IDL = require('../../idl/trustchain_notary.json');
 
 const { Program, AnchorProvider, Wallet } = anchor;
 

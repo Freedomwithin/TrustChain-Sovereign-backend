@@ -28,7 +28,7 @@ const connection = new Connection(rpcUrl, {
 });
 
 export class SolanaGRPCService {
-    private client: any;
+    private client?: any;
     private stream: any;
     private isConnected: boolean = false;
     private isConnecting: boolean = false;
@@ -39,9 +39,15 @@ export class SolanaGRPCService {
     private walletData: Map<string, { transactions: number[], positions: number[], signatures: string[], isHydrated: boolean }> = new Map();
 
     constructor() {
-        // Handle potential differences in ESM/CJS interop for the default export
-        const ClientConstructor = (Client as any).default || Client;
-        this.client = new ClientConstructor(GRPC_URL, undefined, undefined);
+        // Initialization deferred to prevent serverless cold boot issues
+    }
+
+    private getClient() {
+        if (!this.client) {
+            const ClientConstructor = (Client as any).default || Client;
+            this.client = new ClientConstructor(GRPC_URL, undefined, undefined);
+        }
+        return this.client;
     }
 
     public async connect() {
@@ -53,7 +59,7 @@ export class SolanaGRPCService {
 
             // Await getVersion to ensure handshake is solid
             try {
-                const version = await this.client.getVersion();
+                const version = await this.getClient().getVersion();
                 console.log("gRPC Version:", version);
             } catch (err: any) {
                 console.error("gRPC Connection Error (Version check):", err.message);
@@ -65,7 +71,7 @@ export class SolanaGRPCService {
             const maxRetries = 3;
             while (retryCount < maxRetries) {
                 try {
-                    this.stream = await this.client.subscribe();
+                    this.stream = await this.getClient().subscribe();
                     break;
                 } catch (err: any) {
                     if (err.message?.includes('Client not connected') && retryCount < maxRetries - 1) {
