@@ -4,17 +4,16 @@ import * as anchor from '@coral-xyz/anchor';
 import { performance } from 'perf_hooks';
 import * as dotenv from 'dotenv';
 
-
-
-
 dotenv.config();
+
+const IS_VERCEL = process.env.VERCEL === "1";
 
 const { Program, AnchorProvider, Wallet } = anchor;
 
 import { IDL } from '../idl/trustchain_notary.js';
 
 // @ts-ignore
-import { calculateGini, calculateHHI, calculateVoterWeight } from '../services/integrityEngine.js';
+import { calculateGini, calculateHHI, calculateSyncIndex, calculateVoterWeight } from '../services/integrityEngine.js';
 // @ts-ignore
 import { getFairScore, calculateTotalScore } from '../services/reputationEngine.js';
 import { PRIORITY_FEE_CONFIG } from '../config/constants.js';
@@ -27,22 +26,22 @@ const CACHE_TTL = 15000;
 
 let NOTARY_KEYPAIR: Keypair | null = null;
 try {
-    const secretString = process.env.NOTARY_SECRET || "";
-    const cleanString = secretString.replace(/[\[\\]"\s]/g, '');
+    const secretString = process.env.NOTARY_SECRET || '';
+    const cleanString = secretString.replace(/[\[\]"\s]/g, '');
     const secretBytes = Uint8Array.from(cleanString.split(',').map(Number));
     NOTARY_KEYPAIR = Keypair.fromSecretKey(secretBytes);
 } catch (e) {
-    console.error("ERROR: Could not parse NOTARY_SECRET in verify API.");
+    console.error('ERROR: Could not parse NOTARY_SECRET in verify API.');
 }
 
-const rpcUrl = process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com";
+const rpcUrl = process.env.SOLANA_RPC_URL || 'https://api.devnet.solana.com';
 const connection = new Connection(rpcUrl, {
     commitment: 'confirmed',
     confirmTransactionInitialTimeout: 60000,
 });
 
 const PROGRAM_ID = new PublicKey(
-    process.env.TRUSTCHAIN_PROGRAM_ID || "CvEK7knkMGSE4jw9HxNjHndxdChKW6XAxN4wThk3dkLT"
+    process.env.TRUSTCHAIN_PROGRAM_ID || 'CvEK7knkMGSE4jw9HxNjHndxdChKW6XAxN4wThk3dkLT'
 );
 
 const validateAddress = (address: string): boolean => {
@@ -59,6 +58,7 @@ export const getVerificationData = async (address: string) => {
 
     let gini = calculateGini(data.transactions);
     const hhi = calculateHHI(data.positions);
+    const syncIndex = calculateSyncIndex(data.timestamps);
 
     const n = data.transactions.length;
     if (n > 1) {
@@ -70,7 +70,9 @@ export const getVerificationData = async (address: string) => {
     const txCount = data.signatures.length;
 
     let status: string;
-    if (txCount < 3 || data.transactions.length < 2) {
+    if (syncIndex > 0.8 && txCount >= 3) {
+        status = 'SYBIL';
+    } else if (txCount < 3 || data.transactions.length < 2) {
         status = 'PROBATIONARY';
     } else if (gini > 0.9) {
         status = 'SYBIL';
@@ -101,7 +103,8 @@ export const getVerificationData = async (address: string) => {
         statusNum,
         fairScore,
         trustChainScore,
-        totalScore
+        totalScore,
+        syncIndex
     };
 };
 
@@ -134,7 +137,7 @@ verifyRouter.post('/', async (req: any, res: any) => {
     }
 
     const cached = responseCache.get(targetAddress);
-    if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
+    if (cached && (Date.now() - cached.timestamp < CACHE_TTL) && IS_VERCEL) {
         res.setHeader('Cache-Control', 's-maxage=15, stale-while-revalidate=30, public');
         return res.json({ 
             ...cached.data, 
@@ -166,20 +169,21 @@ verifyRouter.post('/', async (req: any, res: any) => {
             statusNum,
             fairScore,
             trustChainScore,
-            totalScore
+            totalScore,
+            syncIndex
         } = await getVerificationData(targetAddress);
 
         let signature: string | null = null;
         try {
             const wallet = new Wallet(NOTARY_KEYPAIR!);
             const provider = new AnchorProvider(connection, wallet, {
-                preflightCommitment: "confirmed"
+                preflightCommitment: 'confirmed'
             });
             const program = new Program(IDL as any, PROGRAM_ID, provider);
 
             const targetPubkey = new PublicKey(targetAddress);
             const [userIntegrityPda] = PublicKey.findProgramAddressSync(
-                [Buffer.from("notary"), targetPubkey.toBuffer()],
+                [Buffer.from('notary'), targetPubkey.toBuffer()],
                 PROGRAM_ID
             );
 
@@ -197,9 +201,9 @@ verifyRouter.post('/', async (req: any, res: any) => {
                 .signers([NOTARY_KEYPAIR!])
                 .rpc();
 
-            console.log(`Notarized ${targetAddress}: ${signature}`);
+            console.log('Notarized ' + targetAddress + ': ' + signature);
         } catch (notaryErr: any) {
-            console.warn(`Notarization skipped: ${notaryErr.message}`);
+            console.warn('Notarization skipped: ' + notaryErr.message);
         }
 
         const weightMultiplier = calculateVoterWeight(totalScore, hhi);
@@ -209,7 +213,7 @@ verifyRouter.post('/', async (req: any, res: any) => {
             scores: {
                 gini,
                 hhi,
-                syncIndex: 0,
+                syncIndex,
                 totalScore,
                 fairScore,
                 trustChainScore
@@ -217,7 +221,7 @@ verifyRouter.post('/', async (req: any, res: any) => {
             governance: {
                 voterWeightMultiplier: weightMultiplier,
                 isQualified: weightMultiplier > 0,
-                tier: weightMultiplier >= 1.5 ? "Steward" : weightMultiplier >= 1.0 ? "Verified" : "Probationary"
+                tier: weightMultiplier >= 1.5 ? 'Steward' : weightMultiplier >= 1.0 ? 'Verified' : 'Probationary'
             },
             txCount,
             signature
@@ -238,7 +242,7 @@ verifyRouter.post('/', async (req: any, res: any) => {
             latencyMs: Math.round(performance.now() - start)
         });
     } catch (error: any) {
-        console.error("Verification error:", error);
+        console.error('Verification error:', error);
         return res.status(500).json({
             error: 'Internal Server Error',
             details: error instanceof Error ? error.message : 'Unknown error'

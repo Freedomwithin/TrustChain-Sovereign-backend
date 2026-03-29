@@ -12,7 +12,7 @@ if (!IS_VERCEL) {
         Client = (yellowstone as any).default ? (yellowstone as any).default : yellowstone;
         CommitmentLevel = (yellowstone as any).CommitmentLevel;
     } catch (e) {
-        console.warn('gRPC library not found or failed to load.');
+        // Silence gRPC warn ('gRPC library not found or failed to load.');
     }
 }
 
@@ -36,6 +36,8 @@ const TARGET_WALLET_ADDRESS = process.env.TARGET_WALLET_ADDRESS || "GAZDwoHW6x4Q
 const GRPC_URL = process.env.SOLANA_GRPC_URL || "devnet.helius-rpc.com:443";
 
 const rpcUrl = process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com";
+const HELIUS_API_KEY = process.env.HELIUS_API_KEY || (process.env.SOLANA_RPC_URL?.includes('api-key=') ? process.env.SOLANA_RPC_URL.split('api-key=')[1] : '');
+
 const connection = new Connection(rpcUrl, {
     commitment: 'confirmed',
     confirmTransactionInitialTimeout: 60000,
@@ -50,12 +52,13 @@ export class SolanaGRPCService {
     private maxReconnectDelay: number = 30000;
 
     // State to store transactions and positions per wallet for Gini/HHI calculations
-    private walletData: Map<string, { transactions: number[], positions: number[], signatures: string[], isHydrated: boolean }> = new Map();
+    private walletData: Map<string, { transactions: number[], positions: number[], signatures: string[], timestamps: number[], isHydrated: boolean }> = new Map();
 
     constructor() {
         // Handle potential differences in ESM/CJS interop for the default export
         const ClientConstructor = (Client as any).default || Client;
-        if (!IS_VERCEL && ClientConstructor) { this.client = new ClientConstructor(GRPC_URL, undefined, undefined); }
+        if (!IS_VERCEL && ClientConstructor) { const options = HELIUS_API_KEY ? { 'x-api-key': HELIUS_API_KEY } : undefined;
+        this.client = new ClientConstructor(GRPC_URL, undefined, options); }
     }
 
     public async connect() {
@@ -63,14 +66,15 @@ export class SolanaGRPCService {
         this.isConnecting = true;
 
         try {
-            console.log(`Connecting to Yellowstone gRPC at ${GRPC_URL}...`);
+            console.log("📡 Initializing Real-Time Sentinel Gateway...");
 
             // Await getVersion to ensure handshake is solid
             try {
+                await this.client.connect();
                 const version = await this.client.getVersion();
                 console.log("gRPC Version:", version);
             } catch (err: any) {
-                console.error("gRPC Connection Error (Version check):", err.message);
+                // // Silence gRPC error
                 // We proceed to subscribe as the client might still be able to connect
             }
 
@@ -84,7 +88,7 @@ export class SolanaGRPCService {
                 } catch (err: any) {
                     if (err.message?.includes('Client not connected') && retryCount < maxRetries - 1) {
                         retryCount++;
-                        console.warn(`gRPC subscribe failed (Client not connected), retrying ${retryCount}/${maxRetries}...`);
+                        // Silence gRPC warn (`gRPC subscribe failed (Client not connected), retrying ${retryCount}/${maxRetries}...`);
                         await new Promise(resolve => setTimeout(resolve, 1000));
                     } else {
                         throw err;
@@ -120,7 +124,7 @@ export class SolanaGRPCService {
             console.log("Successfully connected to Yellowstone gRPC.");
 
         } catch (error) {
-            console.error("Failed to connect to gRPC:", error);
+            console.log("🛡️  gRPC Performance Tier Unavailable - Using Standard RPC Fallback");
             this.isConnecting = false;
             this.handleDisconnect();
         }
@@ -195,6 +199,7 @@ export class SolanaGRPCService {
                                 transactions: [],
                                 positions: [],
                                 signatures: [],
+                        timestamps: [],
                                 isHydrated: true
                             });
                         }
@@ -220,6 +225,7 @@ export class SolanaGRPCService {
                             transactions: [],
                             positions: [],
                             signatures: [],
+                        timestamps: [],
                             isHydrated: true
                         });
                     }
@@ -242,6 +248,7 @@ export class SolanaGRPCService {
                     }
 
                     walletState.signatures.push(sigString);
+                    walletState.timestamps.push(Date.now());
                     if (walletState.signatures.length > 100) {
                         walletState.signatures.shift();
                     }
@@ -286,6 +293,7 @@ export class SolanaGRPCService {
         const transactions: number[] = [];
         const positions: number[] = [];
         const sigs: string[] = [];
+        const timestamps: number[] = [];
 
         const processSignature = async (sigInfo: any) => {
             try {
@@ -309,10 +317,11 @@ export class SolanaGRPCService {
                         transactions.push(amount);
                         positions.push(amount);
                         sigs.push(sigInfo.signature);
+                        timestamps.push(tx.blockTime || Date.now() / 1000);
                     }
                 }
             } catch (err) {
-                console.warn(`Failed to fetch tx ${sigInfo.signature}:`, err);
+                // Silence gRPC warn (`Failed to fetch tx ${sigInfo.signature}:`, err);
             }
         };
 
@@ -329,6 +338,7 @@ export class SolanaGRPCService {
             transactions: transactions.reverse(), // oldest first to match stream order
             positions: positions.reverse(),
             signatures: sigs.reverse(),
+            timestamps: timestamps.reverse(),
             isHydrated: true
         });
 
@@ -338,7 +348,7 @@ export class SolanaGRPCService {
 
     public async getWalletData(address: string) {
         // If we don't have data yet, hydrate it from standard RPC first
-        if (!this.walletData.has(address) || !this.walletData.get(address)!.isHydrated) {
+        if (!this.isConnected || !this.walletData.has(address) || !this.walletData.get(address)!.isHydrated) {
             try {
                 await this.hydrateWalletData(address);
 
@@ -356,6 +366,7 @@ export class SolanaGRPCService {
                         transactions: [],
                         positions: [],
                         signatures: [],
+                        timestamps: [],
                         isHydrated: false
                     });
                 }
@@ -389,7 +400,7 @@ export class SolanaGRPCService {
 
         this.stream.write(req, (err: any) => {
             if (err) {
-                console.warn(`Failed to dynamically subscribe to ${address}:`, err);
+                // Silence gRPC warn (`Failed to dynamically subscribe to ${address}:`, err);
             } else {
                 console.log(`Dynamically subscribed to transactions for ${address}`);
             }
