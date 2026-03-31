@@ -104,7 +104,7 @@ export const getVerificationData = async (address: string) => {
         fairScore,
         trustChainScore,
         totalScore,
-        syncIndex
+        temporalIndex
     };
 };
 
@@ -213,7 +213,7 @@ verifyRouter.post('/', async (req: any, res: any) => {
             scores: {
                 gini,
                 hhi,
-                syncIndex,
+                temporalIndex,
                 totalScore,
                 fairScore,
                 trustChainScore
@@ -249,6 +249,10 @@ verifyRouter.post('/', async (req: any, res: any) => {
         });
     } finally {
         if (inFlightRequests.get(targetAddress) === processPromise) {
+            inFlightRequests.delete(targetAddress);
+        }
+    }
+});lightRequests.get(targetAddress) === processPromise) {
             inFlightRequests.delete(targetAddress);
         }
     }

@@ -44,10 +44,11 @@ export const calculateHHI = (values: number[]): number => {
 };
 
 /**
- * Calculates syncIndex based on transaction timestamps.
- * Detects automated/bot-like behavior (highly synchronized).
+ * Calculates Temporal Sentiment based on transaction timestamps.
+ * Detects mechanical/burst-like behavior typical of Sybil automation.
+ * Range: 0 (Human/Organic) to 1 (Mechanical/Bot)
  */
-export const calculateSyncIndex = (timestamps: number[]): number => {
+export const calculateTemporalSentiment = (timestamps: number[]): number => {
   if (!timestamps || timestamps.length < 3) return 0;
 
   const sorted = [...timestamps].sort((a, b) => a - b);
@@ -57,17 +58,27 @@ export const calculateSyncIndex = (timestamps: number[]): number => {
   }
 
   const mean = diffs.reduce((a, b) => a + b, 0) / diffs.length;
-  if (mean === 0) return 1; // All transactions in same block? Highly synchronized.
+  if (mean === 0) return 1.0; // Instantaneous/Atomic execution (High bot risk)
 
   const variance = diffs.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / diffs.length;
   const stdDev = Math.sqrt(variance);
 
-  // Coefficient of Variation (CV) = stdDev / mean
-  // If CV is low (regular intervals), syncIndex is high.
-  // If CV is high (random intervals), syncIndex is low.
-  // Range: 0 to 1.
+  /**
+   * Coefficient of Variation (CV) = stdDev / mean
+   * Low CV (e.g. < 0.2) = Highly regular intervals (Mechanical)
+   * High CV (e.g. > 1.0) = Highly irregular intervals (Organic/Human)
+   */
   const cv = stdDev / mean;
-  return 1 / (1 + cv);
+  
+  // Normalize to a 0-1 "Bot Likelihood" score
+  const sentiment = 1 / (1 + cv);
+  
+  // Burst Detection: If mean interval is extremely low (< 5 seconds), amplify the sentiment
+  if (mean < 5) {
+      return Math.min(1.0, sentiment * 1.5);
+  }
+
+  return sentiment;
 };
 
 /**
