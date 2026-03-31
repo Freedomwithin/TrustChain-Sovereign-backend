@@ -13,7 +13,7 @@ const { Program, AnchorProvider, Wallet } = anchor;
 import { IDL } from '../idl/trustchain_notary.js';
 
 // @ts-ignore
-import { calculateGini, calculateHHI, calculateSyncIndex, calculateVoterWeight } from '../services/integrityEngine.js';
+import { calculateGini, calculateHHI, calculateTemporalSentiment, calculateVoterWeight } from '../services/integrityEngine.js';
 // @ts-ignore
 import { getFairScore, calculateTotalScore } from '../services/reputationEngine.js';
 import { PRIORITY_FEE_CONFIG } from '../config/constants.js';
@@ -58,7 +58,7 @@ export const getVerificationData = async (address: string) => {
 
     let gini = calculateGini(data.transactions);
     const hhi = calculateHHI(data.positions);
-    const syncIndex = calculateSyncIndex(data.timestamps);
+    const temporalIndex = calculateTemporalSentiment(data.timestamps);
 
     const n = data.transactions.length;
     if (n > 1) {
@@ -70,13 +70,14 @@ export const getVerificationData = async (address: string) => {
     const txCount = data.signatures.length;
 
     let status: string;
-    if (syncIndex > 0.8 && txCount >= 3) {
+    // Enhanced status logic: High temporalIndex (>0.85) is now a primary sybil indicator
+    if (temporalIndex > 0.85 && txCount >= 3) {
         status = 'SYBIL';
     } else if (txCount < 3 || data.transactions.length < 2) {
         status = 'PROBATIONARY';
     } else if (gini > 0.9) {
         status = 'SYBIL';
-    } else if (gini < 0.3) {
+    } else if (gini < 0.3 && temporalIndex < 0.6) {
         status = 'VERIFIED';
     } else {
         status = 'PROBATIONARY';
@@ -170,7 +171,7 @@ verifyRouter.post('/', async (req: any, res: any) => {
             fairScore,
             trustChainScore,
             totalScore,
-            syncIndex
+            temporalIndex
         } = await getVerificationData(targetAddress);
 
         let signature: string | null = null;
@@ -249,10 +250,6 @@ verifyRouter.post('/', async (req: any, res: any) => {
         });
     } finally {
         if (inFlightRequests.get(targetAddress) === processPromise) {
-            inFlightRequests.delete(targetAddress);
-        }
-    }
-});lightRequests.get(targetAddress) === processPromise) {
             inFlightRequests.delete(targetAddress);
         }
     }
