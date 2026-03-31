@@ -10,8 +10,8 @@
     "dev": "npm-run-all --parallel dev:server dev:gateway",
     "dev:server": "tsx server.ts",
     "dev:gateway": "tsx hono_edge.ts",
-    "build": "echo no-build",
-    "vercel-build": "echo no-build"
+    "build": "tsc",
+    "vercel-build": "tsc"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",

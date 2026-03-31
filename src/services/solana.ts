@@ -55,10 +55,15 @@ export class SolanaGRPCService {
     private walletData: Map<string, { transactions: number[], positions: number[], signatures: string[], timestamps: number[], isHydrated: boolean }> = new Map();
 
     constructor() {
-        // Handle potential differences in ESM/CJS interop for the default export
-        const ClientConstructor = (Client as any).default || Client;
-        if (!IS_VERCEL && ClientConstructor) { const options = HELIUS_API_KEY ? { 'x-api-key': HELIUS_API_KEY } : undefined;
-        this.client = new ClientConstructor(GRPC_URL, undefined, options); }
+        // Only attempt to initialize if not on Vercel and Client is loaded
+        if (!IS_VERCEL && Client) {
+            // Handle potential differences in ESM/CJS interop for the default export
+            const ClientConstructor = (Client as any).default || Client;
+            if (ClientConstructor) {
+                const options = HELIUS_API_KEY ? { 'x-api-key': HELIUS_API_KEY } : undefined;
+                this.client = new ClientConstructor(GRPC_URL, undefined, options);
+            }
+        }
     }
 
     public async connect() {
@@ -131,7 +136,7 @@ export class SolanaGRPCService {
     }
 
     private async subscribeToTargetWallet() {
-        const commitmentLevel = CommitmentLevel ? CommitmentLevel.CONFIRMED : (Client as any).CommitmentLevel?.CONFIRMED || 1;
+        const commitmentLevel = CommitmentLevel ? CommitmentLevel.CONFIRMED : (Client?.CommitmentLevel?.CONFIRMED) || 1;
 
         const req = {
             transactions: {
@@ -378,7 +383,7 @@ export class SolanaGRPCService {
 
     private dynamicallySubscribeToWallet(address: string) {
         // If we want to add dynamic subscriptions:
-        const commitmentLevel = CommitmentLevel ? CommitmentLevel.CONFIRMED : (Client as any).CommitmentLevel?.CONFIRMED || 1;
+        const commitmentLevel = CommitmentLevel ? CommitmentLevel.CONFIRMED : (Client?.CommitmentLevel?.CONFIRMED) || 1;
         const req = {
             transactions: {
                 [`wallet_${address.substring(0, 8)}`]: {
