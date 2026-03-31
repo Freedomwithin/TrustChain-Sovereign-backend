@@ -18,10 +18,11 @@ Successfully refactored the backend for Vercel Serverless compatibility. Fixed t
     - `rewrites`: Redirects all traffic to `/api/index`
 
 ## 🚀 Recent Strikes
-- [x] **Vercel 500 Fix:** Guarded `SolanaGRPCService` to prevent null pointer errors on serverless environments.
-- [x] **Build Pipeline:** Updated `package.json` to correctly compile TypeScript into `dist/` during deployment.
-- [x] **Import Alignment:** Fixed the circular build trap in `api/index.ts`.
-- [x] **Git Sync:** Pushed all fixes to `main` branch (SHA: `4d2c6da`).
+- [x] **Vercel 500 Fix:** Guarded `SolanaGRPCService` to prevent null pointer errors.
+- [x] **Build Pipeline:** Corrected `package.json` for ESM build compatibility.
+- [x] **Temporal Sentiment Engine:** (NEW) Implemented standard deviation variance analysis and burst detection in `integrityEngine.ts`.
+- [x] **API Payload:** Updated `/api/verify` to return the new `temporalIndex` to the HUD.
+- [x] **Git Sync:** Pushed all Phase 2 fixes to `main` (SHA: `4d2c6da` and subsequent).
 
 ## 🚀 Next Steps (For Wednesday Redo)
 - [ ] **Frontend (HUD) Audit:** Ensure `TrustChain-Website` is pointing to the new Vercel backend URL.
