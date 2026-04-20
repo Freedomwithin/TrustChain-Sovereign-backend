@@ -27,6 +27,8 @@ const IS_VERCEL = process.env.VERCEL === '1';
 // ---- V3 Service Imports ----
 // Note: Using .ts extensions for compatibility with node --experimental-strip-types
 import { verifyRouter } from './src/api/verify.js';
+import { waitlistRouter } from './src/api/waitlist.js';
+import { paymentsRouter } from './src/api/payments.js';
 
 // ---- Notary Initialization ----
 let NOTARY_KEYPAIR: Keypair | null = null;
@@ -61,8 +63,9 @@ app.use(cors({
 app.use(express.json());
 
 // ---- Unified V3 Handshake ----
-// This router handles Yellowstone gRPC, /(n-1)$ Math, and Pool ID Bypasses
 app.use('/api/verify', verifyRouter);
+app.use('/api/waitlist', waitlistRouter);
+app.use('/api/payments', paymentsRouter);
 
 // ---- Legacy Health Checks ----
 app.get('/', (req, res) => {
